@@ -6,6 +6,10 @@ from input import *
 
 
 class GameController:
+    """
+    Coordinates the part of the game that manages the logic of the game itself, instead of graphics
+    Controls: Player, Room, Map, Input + more when added
+    """
 
     player: Player = None
     map: Map = None
@@ -20,7 +24,7 @@ class GameController:
         self.player = Player(self.map)
         GameController.player = self.player
         self.print(self.player.room)
-        self.map.print_map(2)
+        # self.map.print_map(2)
 
     def update(self):
         queue = self.event_queue
@@ -55,6 +59,8 @@ class GameController:
             if inp.value() == 'roominfo':
                 self.print(self.player.room)
                 return []
+            elif inp.value() == 'help':
+                self.print(Input.commandinfo())
 
         if inp.type() == 'settings':
             ls = [inp]

@@ -43,14 +43,17 @@ class RunController:
         self.events.extend(self.gph.update(game_events))
 
         if game_events is not None:
-            for i, e in enumerate(game_events):
+            for e in game_events:
                 if e.type() == 'print':
                     pass
-                    # print(e.value())
-                    # self.game_events.pop(i)
+                    print(e.value())  # uncomment to print text output also to the console
 
     # Begin the game loop
     def run(self):
+        out = None
+        self.gph.intro_start()
+        while out is None:
+            out = self.gph.intro_update()
 
         while self.running:
             self.update()

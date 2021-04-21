@@ -6,10 +6,12 @@ from random_words import RandomWords
 sides = {'n': (0, -1), 'e': (1, 0), 's': (0, 1), 'w': (-1, 0)}
 opposites = {'n': 's', 'e': 'w', 's': 'n', 'w': 'e'}
 
+# templates for room names, replace each number with a random word
 templates = ['1 of 2', '1\'s 2', 'The 1ian 2',  'The Dungeon of 1', 'Hall of 1', 'The 1 of Mystery']
 
 rw = RandomWords()
-debug = True
+debug = False
+LINK_CHANCE_DEFAULT = 0.8
 
 
 class Room:
@@ -42,8 +44,6 @@ class Room:
         self.links = {n: self.get_linked_room(n) for n in [d for d in directions if self.has_link(d)]}
 
         # print(self.links)
-        # print(self.links_bool)
-        # print()
         # print(self.links_bool)
 
     def link_room(self, direction: str, room: 'Room' = None):
@@ -81,17 +81,10 @@ class Room:
     def __str__(self):
         string = ''
         x, y = self.pos
-        fastdebug = False  # to print debug info quicker
-
-        if fastdebug and debug:  # Outputs debug info on first two lines
-            string += '\n' + self.name + '\n'
-            string += 'Pos: (' + str(x) + ', ' + str(y) + ')'
-            for d, val in self.links_bool.items():
-                string += d.upper() + ': ' + str(1 if val else 0) + ', '
 
         string += '\n------ ' + self.name + " ------\n" + self.description
 
-        if debug and not fastdebug:  # Debugging information
+        if debug:  # Debugging information
             string += '\n<Debug>: '
             for d, val in self.links_bool.items():
                 string += d.upper() + ': ' + str(1 if val else 0) + ', '
@@ -110,9 +103,6 @@ class Room:
 
     def get_details(self):
         return {'obj': self, 'name': self.name, 'description': self.description, 'links': self.links}
-
-    def get_linked_room_old(self, direction):
-        return self.links[direction] if direction in self.links else None
 
     # This method should be used to get linked rooms
     def get_linked_room(self, direction):
@@ -162,9 +152,9 @@ class Room:
 
     # Create and return a random room
     @staticmethod
-    def random(seed=None, pos: Tuple[int, int] = (0, 0)):
-
-        link_chance = 0.6
+    def random(seed=None, pos: Tuple[int, int] = (0, 0), link_chance=None):
+        if link_chance is None:
+            link_chance = LINK_CHANCE_DEFAULT
 
         links = {'s': random() < link_chance, 'e': random() < link_chance}
 

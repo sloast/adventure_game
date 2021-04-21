@@ -30,14 +30,15 @@ add('wasd')
 add('nesw', 'compass')
 add('arrows', 'arrow keys')
 
-add('roominfo', 'room', 'info')
+add('roominfo', 'room', 'room info')
+add('help', 'commands')
 
 inputs = curr_dict
 types = {}
 curr_dict = types
 add('move', 'n', 'e', 's', 'w')
 add('input_settings', 'wasd', 'nesw', 'arrows')
-add('info', 'roominfo')
+add('info', 'roominfo', 'help')
 
 
 direct_types = ['move', 'help', 'info']
@@ -78,3 +79,13 @@ class Input:
             return ev
 
         return Event('error', 'game', 'input_event_failed',  command=name, text=text)
+
+    @staticmethod
+    def commandinfo():
+        commandlist = []
+        string = '\nAvailable commands:\n'
+        for command in inputs.values():
+            if command not in commandlist:
+                commandlist.append(command)
+                string += command + ', '
+        return string

@@ -42,15 +42,15 @@ class MapRenderer:
         self.surface = pygame.Surface(map_dimensions)
         p_size: float = 20.0
         p_padding: float = 3.0
+
         # Rescaling the player caused it to be slightly misshaped
-        """
-        self.p_size = (p_size * self.scale, p_size * self.scale)
-        self.player_surf = pygame.Surface(self.p_size)
-        player_center_surf = pygame.Surface(((p_size-p_padding*2) * self.scale, (p_size-p_padding*2) * self.scale))
-        self.player_surf.fill('black')
-        player_center_surf.fill('red')
-        self.player_surf.blit(player_center_surf, (p_padding*self.scale, p_padding*self.scale))
-        """
+        # self.p_size = (p_size * self.scale, p_size * self.scale)
+        # self.player_surf = pygame.Surface(self.p_size)
+        # player_center_surf = pygame.Surface(((p_size-p_padding*2) * self.scale, (p_size-p_padding*2) * self.scale))
+        # self.player_surf.fill('black')
+        # player_center_surf.fill('red')
+        # self.player_surf.blit(player_center_surf, (p_padding*self.scale, p_padding*self.scale))
+
         # Player is not resized according to self.scale
         self.p_size = (p_size, p_size)
         self.player_surf = pygame.Surface(self.p_size)
@@ -80,7 +80,7 @@ class MapRenderer:
         return self._image
 
     # called when the map has changed
-    def draw(self, offset=(0, 0), radius=5, scale: float = 1,
+    def draw(self, offset=(0, 0), radius=2, scale: float = 1,
              explore_all=False, render=True, draw_minimap=True, surf=None, surfsize=None):
         if surf is None:
             surf = self.surface
@@ -92,12 +92,9 @@ class MapRenderer:
         room_spacing = room_size + corridor_size
 
         arr = self.map.get_visible_area(radius, explore_all=explore_all)
-        # self.map.print_map(radius, explore_all=False)
 
         # self.window.fill('black')
         surf.fill('black')
-
-        # self.surface.blit(self.draw_room(arr[3][3]), center(self.m_size, (100, 100)))
 
         for y, row in enumerate(arr):
             for x, room in enumerate(row):
@@ -181,6 +178,7 @@ class MapRenderer:
         self.window.blit(self.player_surf, center(self.w_size, self.p_size))
         self._image.blit(self.window, (self.total_padding, self.total_padding))
 
+    # animates the movement between rooms, but has to suspend the rest of the program for the duration
     def move(self, draw_func, direction, time: int = 30):
         dist = (self.room_size + self.room_spacing) * self.scale
         start = Vector2(0, 0)
@@ -194,6 +192,7 @@ class MapRenderer:
         self.draw()
         draw_func(self._image, self.pos, 0)
 
+    # called each tick of the animation by the Coroutine class
     def move_coroutine(self, i: int, end: int, direction: str):
         dist = (self.room_size + self.room_spacing) * self.scale
         start = Vector2(0, 0)

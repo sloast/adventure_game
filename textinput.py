@@ -4,6 +4,8 @@ Copyright 2017, Silas Gyger, silasgyger@gmail.com, All rights reserved.
 Borrowed from https://github.com/Nearoo/pygame-text-input under the MIT license.
 """
 
+# this class has been modified for use in the text entry box and the faded text directly above it
+
 import os.path
 
 import pygame

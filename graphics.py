@@ -60,6 +60,54 @@ class Graphics:
         self.coroutines = deque([])
         self.arrows_enabled = True
 
+    def intro_start(self):
+        intro_text = 'initializing...\n\nwelcome to the alpha of adventure_game.py!\n' \
+                     'You can type commands to move or carry out other actions.\n' \
+                     'type \'help\' for a full list of available commands.\n' \
+                     'press any key to continue...'
+        Coroutine(self.output.print_coroutine, len(intro_text), delay=1, singular_type=TextOutput,
+                  end_func=Coroutine.invoke(self.output.draw, 4), text=intro_text)
+
+    def intro_update(self):
+
+        output = None
+
+        events = pygame.event.get()
+
+        if self.textinput.update(events) and Coroutine.input():
+            input_text = self.textinput.get_text().lower()
+            if len(input_text) > 0:
+                output = (Event('input', 'game', input_text,
+                                text=input_text))
+                self.textinput.clear_text()
+                print('> ' + input_text)
+            self.prev_input(input_text)
+
+        for event in events:
+            if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
+                self.rcont.quit()
+                return Event('quit', 'all', 'graphics_quit')
+            elif event.type == KEYDOWN:
+                return Event('start', 'main', 'game_start')
+
+        Coroutine.update()
+        self.screen.fill((0, 0, 0))
+
+        self.screen.blit(self.text_box, (10, self.SCREEN_DIMENSIONS[1] - 56))
+        self.screen.blit(self.textoutput2.get_surface(), (20, self.SCREEN_DIMENSIONS[1] - 130))
+        self.screen.blit(self.textoutput1.get_surface(), (20, self.SCREEN_DIMENSIONS[1] - 90))
+        self.screen.blit(self.textinput.get_surface(), (20, self.SCREEN_DIMENSIONS[1] - 47))
+
+        # self.screen.blit(self.map.image(), (10, 10))
+        # self.screen.blit(self.infobox.draw(), (626, 10))
+        self.screen.blit(self.output.image(), (10, 426))
+
+        pygame.display.flip()
+
+        self.clock.tick(40)
+
+        return output
+
     def update(self, game_events=None):
         if game_events is None:
             game_events = []

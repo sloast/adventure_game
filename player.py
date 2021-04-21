@@ -3,6 +3,9 @@ from room import Room
 
 
 class Player:
+    """
+    represents the player's character in the game
+    """
 
     def __init__(self, map_, health=3, items=None):
         self.items = items if items is not None else []

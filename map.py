@@ -17,16 +17,21 @@ def printarr(arr):
         print(row)
 
 
-def printmap(arr):
-    print('\n')
+def printmap(arr, word_length=10):
+    ln = len(arr)
+    print('\n-' + '-' * ((word_length+3) * ln))
     for row in arr:
+        out.write('| ')
         for val in row:
-            out.write(str((val.name + '      ')[:6] if val else '      ') + '|')
+            out.write(str((val.name + ' ' * word_length)[:word_length] if val else ' ' * word_length) + ' | ')
 
-        print('\n' + '-------' * len(row))
+        print('\n-' + '-' * ((word_length+3) * ln))
 
 
 class Map:
+    """
+    stores all rooms in a 2D list and can return an area of them or generate new rooms
+    """
 
     def __init__(self):
         Room.map_obj = self
@@ -50,6 +55,7 @@ class Map:
 
         self.map_radius = 0
         self.side_length = 0
+        self.room_chance = 0.7
         self.map: List[List[Optional[Room]]] = []
         self.create_map()
 
@@ -88,7 +94,7 @@ class Map:
 
         self.extend_map(3)
         self.generate()
-        self.print_map(explore_all=True)
+        # self.print_map(explore_all=True)
 
     def mapper(self):
         pass
@@ -138,36 +144,8 @@ class Map:
         self.rooms.append(new_room)
         return None
 
-    """
+    # deprecated, but could be reused for pathfinding
     def get_visible_area_old(self, distance=3, explore_all=False, room=None):
-        if room is None:
-            room = self.curr_room
-
-        size = distance * 2 + 1
-
-        arr = [[None for _ in range(size)] for _ in range(size)]
-
-        queue = deque([(room, Vector2(distance, distance))])
-
-        arr[distance][distance] = room
-
-        while len(queue) > 0:
-            curr_tuple = queue.popleft()
-            curr = curr_tuple[0]
-            curr_coords = curr_tuple[1]
-            for d, coord_diff in sides.items():
-                new_room = curr.get_linked_room(d)
-                nc = curr_coords + coord_diff
-                if min(nc.x, nc.y) >= 0 and max(nc.x, nc.y) < size \
-                        and new_room is not None and arr[int(nc.y)][int(nc.x)] is None:
-                    arr[int(nc.y)][int(nc.x)] = new_room
-                    if new_room.explored() or explore_all:
-                        queue.append((new_room, nc))
-
-        return arr
-        """
-
-    def get_visible_area(self, distance=3, explore_all=False, room=None):
         if room is None:
             room = self.curr_room
 
@@ -202,17 +180,41 @@ class Map:
                             and arr[y+diffy][x+diffx] is None and full_arr[y+diffy][x+diffx] not in used:
                         queue.append((x+diffx, y+diffy))
                         used.append(room)
-                        # print('bazinga')  # very useful testing code
-                    # else:
-                    #    if self.inrange(x+diffx, y+diffy):
-                    #        print(self.inrange(local(x+diffx, y+diffy)), curr_room.has_link(d))
-                    #        # full_arr[y+diffy][x+diffx] not in used,
-                    #        # full_arr[y+diffy][x+diffx].pos)
-                    #    else:
-                    #        print('RANGE', local(y + diffy, x + diffx))
 
         return arr
 
+    # improved version of Map.get_visible_area_old() - fixes visibilty issues
+    # still very inefficient, but it doesnt matter as the map is relatively small
+    def get_visible_area(self, distance=3, explore_all=False, room=None):
+        if room is None:
+            room = self.curr_room
+
+        size = distance * 2 + 1
+        full_arr = self.get_area(distance, room)
+
+        if explore_all:
+            return full_arr
+
+        arr: List[List[Optional[Room]]] = [[None for _ in range(size)] for _ in range(size)]
+
+        for y, row in enumerate(full_arr):
+            for x, item in enumerate(row):
+
+                if item is None or item.empty():
+                    arr[y][x] = Empty()
+
+                elif item.explored():
+                    arr[y][x] = item
+
+                else:  # if room is adjacent to an explored room
+                    for d in sides:
+                        if item.has_link(d) and item.get_linked_room(d).explored():
+                            arr[y][x] = item
+                            break
+
+        return arr
+
+    # returns all the rooms in the area, even if they are not visible
     def get_area(self, distance=3, room=None):
         if room is None:
             room = self.curr_room
@@ -221,8 +223,7 @@ class Map:
         size = distance * 2 + 1
         mapper = lambda a, b: (a + start_coords[0]-distance, b + start_coords[1]-distance)
 
-        arr = [[None for _ in range(size)] for _ in range(size)]
-        # arr[distance][distance] = room
+        arr: List[List[Optional[Room]]] = [[None for _ in range(size)] for _ in range(size)]
 
         for y, row in enumerate(arr):
             for x, item in enumerate(row):
@@ -233,7 +234,8 @@ class Map:
         # printmap(arr)
         return arr
 
-    def print_map(self, distance=3, size=6, explore_all=False, room=None):
+    # output the map to the console in a grid
+    def print_map(self, distance=3, size=10, explore_all=False, room=None):
 
         arr = self.get_visible_area(distance, explore_all, room)
 
@@ -254,35 +256,31 @@ class Map:
             print((('---' + ('-' * size)) * (distance * 2 + 1)) + '-')
 
     # randomly generate all rooms within a radius of the player
-    def generate(self, distance=5, room=None, inplace=True):
+    def generate(self, distance=5, room=None, inplace=True, room_chance=None):
         if room is None:
             room = self.curr_room
+        if room_chance is None:
+            room_chance = self.room_chance
 
         self.check_size(distance+2, room)
 
         start_coords = room.pos
         size = distance * 2 + 1
         mapper = lambda a, b: (a + start_coords[0]-distance, b + start_coords[1]-distance)
-        local = lambda a, b: (a-distance, b-distance)
-        localr = lambda a, b: (a + distance, b + distance)
+        # unused
+        # local = lambda a, b: (a-distance, b-distance)
+        # localr = lambda a, b: (a + distance, b + distance)
 
         arr = self.get_visible_area(distance, explore_all=True, room=room)
-        printmap(arr)
+        # printmap(arr)
 
         for y, row in enumerate(arr):
             for x, item in enumerate(row):
                 if item is None:
-                    if random() > 1:
+                    if random() > room_chance:
                         item = Empty()
                     else:
                         item, new_links = Room.random()
-
-                        # x2, y2, = mapper(x, y)  # < Debugging code
-                        # print(self.curr_room.name, item.name, x, y, x2, y2)
-
-                        # link_chance = 0.7
-                        # item = Room('r=' + str(randint(0, 999)), coords=local(x, y),
-                        #             links={'s': random() < link_chance, 'e': random() < link_chance})
 
                     arr[y][x] = item
                     if inplace:
@@ -291,16 +289,14 @@ class Map:
                         if self.get(x2, y2) is None:
                             self.set(x2, y2, item)
 
-        # printmap(arr)
         self.update_all_links()
-        printmap(arr)
 
-        x1b, y1b = start_coords[0] + self.map_radius, start_coords[1] + self.map_radius
-        x1, y1 = mapper(0, 0)
-        x1, y1 = x1+self.map_radius, y1+self.map_radius
-        print(start_coords, x1, y1, x1b, y1b)
-        x2, y2 = x1 + size, y1 + size
-        printmap([line[x1:x2] for line in self.map[y1:y2]])
+        # Uncomment to print the map to the console
+        # printmap(arr)  # prints the local generated array
+
+        # x, y = mapper(0, 0)  # prints the same section from the full map
+        # x, y = x+self.map_radius, y+self.map_radius
+        # printmap([line[x:x+size] for line in self.map[y:y+size]])
 
         return arr
 
@@ -315,7 +311,6 @@ class Map:
         if not self.inrange(x, y, False):
             return None
 
-        # print('Get: ', self.map[y][x].name if self.map[y][x] else 'None')
         return self.map[y][x]
 
     def inrange(self, x: Union[int, Tuple[int, int]], y: Optional[int] = None, local=True):

@@ -29,6 +29,7 @@ class Graphics:
         pygame.init()
         pygame.font.init()
         pygame.display.set_caption('an interesting title')
+        pygame.key.set_repeat()
 
         self.map = MapRenderer(map_obj)
         self.output = TextRenderer()
@@ -54,6 +55,9 @@ class Graphics:
         self.textoutput1 = TextInput(**self.text_out_params)
         self.text_out_params['text_color'] = (50, 50, 50)
         self.textoutput2 = TextInput(**self.text_out_params)
+
+        self.arrowspressed = {K_UP: False, K_DOWN: False, K_LEFT: False, K_RIGHT: False}
+        self.arrowspressed = {d: False for d in [K_UP, K_DOWN, K_LEFT, K_RIGHT]}
 
         self.clock = pygame.time.Clock()
         self.queue = deque([])
@@ -117,7 +121,7 @@ class Graphics:
         output = []
         events = pygame.event.get()
 
-        if self.textinput.update([] if self.await_input and Coroutine.input() else events):
+        if self.textinput.update([] if self.await_input or not Coroutine.input() else events):
             input_text = self.textinput.get_text().lower()
             if len(input_text) > 0:
                 output.append(Event('input', 'game', input_text,
@@ -126,17 +130,32 @@ class Graphics:
                 print('> ' + input_text)
             self.prev_input(input_text)
 
+        # print([str(event.type) + '-' + str(event.key) for event in events])
+        arrow_pressed = False
         for event in events:
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 self.rcont.quit()
                 return [Event('quit', 'all', 'graphics_quit')]
-            if not self.await_input and self.arrows_enabled and Coroutine.input() and event.type == KEYDOWN:
+
+            # broken
+            if not self.await_input and not arrow_pressed and self.arrows_enabled \
+                    and Coroutine.input() and event.type == KEYDOWN\
+                    and pygame.key.get_pressed()[event.key]:
                 key_vals = {K_UP: 'north', K_DOWN: 'south', K_LEFT: 'west', K_RIGHT: 'east'}
                 if event.key in key_vals:
-                    output.append(Event('input', 'game', key_vals[event.key],
-                                        text=key_vals[event.key]))
+                    ev = Event('input', 'game', key_vals[event.key],
+                               text=key_vals[event.key])
+
+                    self.queue.extend(self.rcont.game.event(ev))
+                    # output.append(ev)
+
                     self.prev_input(key_vals[event.key])
-            if self.await_input and event.type == KEYDOWN:
+                    self.textinput.clear_text()
+                    arrow_pressed = True
+                    print(key_vals[event.key])
+                # print(pygame.key.get_pressed()[event.key])
+
+            elif self.await_input and event.type == KEYDOWN:
                 self.await_input = False
                 output.append(Event('keypress', 'game', 'continue'))
 

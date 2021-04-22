@@ -45,7 +45,7 @@ class RunController:
                 if e.type() == 'print':
                     pass
                     # print text output also to the console
-                    print(e.get_value('text') if 'text' in e else e.value())
+                    # print(e.get_value('text') if 'text' in e else e.value())
 
     # Begin the game loop
     def run(self):

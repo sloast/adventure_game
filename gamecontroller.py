@@ -24,6 +24,7 @@ class GameController:
         self.player = Player(self.map)
         GameController.player = self.player
         self.print(self.player.room)
+        self.printqueue = deque([])
         # self.map.print_map(2)
 
     def update(self):
@@ -34,16 +35,36 @@ class GameController:
     def event(self, event):
         if event.type() == 'input':
             return self.input_event(event.value())
+        elif event.type() == 'keypress':
+            self.printnext()
+            return []
 
-    def print(self, text, sendto='all'):
-        self.event_queue.append(Event('print', sendto, text, text=text))
+    def print(self, text, queue=False, multi=False, sendto='all'):
+        if multi:
+            ev = Event('print', sendto, str(text) + '\nPress any key to continue...', text=str(text), multi=True)
+        else:
+            ev = Event('print', sendto, str(text), text=str(text))
+        if queue:
+            self.printqueue.append(ev)
+        else:
+            self.event_queue.append(ev)
 
-    def input_event(self, text, event=None):
-        inp: Event = Input.get_input(text)
+    def printnext(self):
+        if self.printqueue:
+            self.event_queue.append(self.printqueue.popleft())
+        else:
+            self.print(self.player.room)
+
+    def input_event(self, text, event: Event = None):
+        if event is None:
+            inp: Event = Input.get_input(text)
+        else:
+            inp: Event = event
         if inp is None or inp.type() == 'error':
             # error
-            self.print('\n-----ERROR-----\ninvalid input:' + (('\n' + str(inp)) if inp else 'No input detected'))
-            self.print(self.player.room)
+            self.print('\n-----ERROR-----\ninvalid input:' + (('\ninputted text:' + str(inp.get_value('text'))) if inp else 'No input detected'),
+                       multi=True)
+            self.print(self.player.room, queue=True)
             return []
 
         if inp.type() == 'move':
@@ -60,7 +81,7 @@ class GameController:
                 self.print(self.player.room)
                 return []
             elif inp.value() == 'help':
-                self.print(Input.commandinfo())
+                self.print(Input.help())
 
         if inp.type() == 'settings':
             ls = [inp]

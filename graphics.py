@@ -59,10 +59,11 @@ class Graphics:
         self.queue = deque([])
         self.coroutines = deque([])
         self.arrows_enabled = True
+        self.await_input = False
 
     def intro_start(self):
-        intro_text = 'initializing...\n\nwelcome to the alpha of adventure_game.py!\n' \
-                     'You can type commands to move or carry out other actions.\n' \
+        intro_text = 'initializing...\n\nwelcome to adventure_game.py!\n' \
+                     'you can type commands to move or carry out other actions.\n' \
                      'type \'help\' for a full list of available commands.\n' \
                      'press any key to continue...'
         Coroutine(self.output.print_coroutine, len(intro_text), delay=1, singular_type=TextOutput,
@@ -116,7 +117,7 @@ class Graphics:
         output = []
         events = pygame.event.get()
 
-        if self.textinput.update(events) and Coroutine.input():
+        if self.textinput.update([] if self.await_input and Coroutine.input() else events):
             input_text = self.textinput.get_text().lower()
             if len(input_text) > 0:
                 output.append(Event('input', 'game', input_text,
@@ -129,12 +130,15 @@ class Graphics:
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 self.rcont.quit()
                 return [Event('quit', 'all', 'graphics_quit')]
-            if self.arrows_enabled and Coroutine.input() and event.type == KEYDOWN:
+            if not self.await_input and self.arrows_enabled and Coroutine.input() and event.type == KEYDOWN:
                 key_vals = {K_UP: 'north', K_DOWN: 'south', K_LEFT: 'west', K_RIGHT: 'east'}
                 if event.key in key_vals:
                     output.append(Event('input', 'game', key_vals[event.key],
                                         text=key_vals[event.key]))
                     self.prev_input(key_vals[event.key])
+            if self.await_input and event.type == KEYDOWN:
+                self.await_input = False
+                output.append(Event('keypress', 'game', 'continue'))
 
         while len(self.queue) > 0:
             event = self.queue.popleft()
@@ -153,6 +157,8 @@ class Graphics:
                 text = str(event.value()).strip('\n')
                 Coroutine(self.output.print_coroutine, len(text), delay=1, singular_type=TextOutput,
                           end_func=Coroutine.invoke(self.output.draw, 4), text=text)
+                if 'multi' in event:
+                    self.await_input = True
 
         Coroutine.update()
         self.screen.fill((0, 0, 0))

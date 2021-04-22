@@ -176,7 +176,6 @@ class Room:
 
 
 class EmptyRoom(Room):
-
     """
     Represents the absence of a room, as opposed to an area where a room has not yet been generated.
     The Empty() function is used to get a reference to this object

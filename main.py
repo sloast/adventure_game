@@ -29,18 +29,16 @@ class RunController:
 
         self.game_events: list = []
         self.show_graphics: bool = show_graphics
-        self.events: deque = deque([])
-
-        self.gph.update([])
+        self.graphics_events: deque = deque([])
 
     # Update each frame
     def update(self):
         game_events = []
-        if self.events:
-            game_events = self.game.event(self.events.popleft())
+        if self.graphics_events:
+            game_events = self.game.event(self.graphics_events.popleft())
         game_events.extend(self.game.update())
 
-        self.events.extend(self.gph.update(game_events))
+        self.graphics_events.extend(self.gph.update(game_events))
 
         if game_events is not None:
             for e in game_events:

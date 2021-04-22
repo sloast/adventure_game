@@ -62,10 +62,10 @@ class Graphics:
         self.await_input = False
 
     def intro_start(self):
-        intro_text = 'initializing...\n\nwelcome to adventure_game.py!\n' \
+        intro_text = 'initializing&20.&20.&20.&20\n\nwelcome to adventure_game.py!\n' \
                      'you can type commands to move or carry out other actions.\n' \
                      'type \'help\' for a full list of available commands.\n' \
-                     'press any key to continue...'
+                     '\npress any key to continue...'
         Coroutine(self.output.print_coroutine, len(intro_text), delay=1, singular_type=TextOutput,
                   end_func=Coroutine.invoke(self.output.draw, 4), text=intro_text)
 

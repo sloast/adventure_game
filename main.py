@@ -44,15 +44,18 @@ class RunController:
             for e in game_events:
                 if e.type() == 'print':
                     pass
-                    print(e.value())  # uncomment to print text output also to the console
+                    # print text output also to the console
+                    print(e.get_value('text') if 'text' in e else e.value())
 
     # Begin the game loop
     def run(self):
+        # intro screen (or menu?)
         out = None
         self.gph.intro_start()
         while out is None:
             out = self.gph.intro_update()
 
+        # main game loop
         while self.running:
             self.update()
 

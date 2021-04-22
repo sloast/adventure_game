@@ -41,7 +41,7 @@ class GameController:
 
     def print(self, text, queue=False, multi=False, sendto='all'):
         if multi:
-            ev = Event('print', sendto, str(text) + '\nPress any key to continue...', text=str(text), multi=True)
+            ev = Event('print', sendto, str(text) + '\npress any key to continue...', text=str(text), multi=True)
         else:
             ev = Event('print', sendto, str(text), text=str(text))
         if queue:
@@ -62,7 +62,8 @@ class GameController:
             inp: Event = event
         if inp is None or inp.type() == 'error':
             # error
-            self.print('\n-----ERROR-----\ninvalid input:' + (('\ninputted text:' + str(inp.get_value('text'))) if inp else 'No input detected'),
+            self.print('\nCommand not recognized: ' +
+                       (('"' + str(inp.get_value('text')) + '"' if inp else 'No input detected') + '\n'),
                        multi=True)
             self.print(self.player.room, queue=True)
             return []

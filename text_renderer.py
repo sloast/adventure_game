@@ -1,6 +1,7 @@
 import pygame
 from pygame.math import Vector2
 from typing import Union, Tuple, Optional
+import re
 
 
 def corner(x_pos: Tuple[int, int], x_size: Tuple[int, int]):
@@ -134,7 +135,19 @@ class TextRenderer:
             draw_func(self.image(), self.pos, delay=delay)
 
     def print_coroutine(self, i: int, end: int, text: str) -> Optional[int]:
-        self.add_text(text[:i+1], 0, True)
-        self.draw(end_text='£')
-        return 10 if text[i] == '\n' else None
+        returnval = None
+        if text[i] == '&':
+            returnval = int(text[i+1:i+3])
+        elif text[i] == '\n':
+            returnval = 10
+
+        num = 0
+        for s in re.findall('&..|&.|&', text[:i+1]):
+            num += len(s)
+
+        text = re.sub('&..', '', text) + ' ' * num
+
+        self.add_text(text[:i+1-num], 0, True)
+        self.draw()
+        return returnval
         # draw_func(self.image(), self.pos, delay=0)

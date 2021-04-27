@@ -11,7 +11,7 @@ templates = ['1 of 2', '1\'s 2', 'The 1ian 2',  'The Dungeon of 1', 'Hall of 1',
 
 rw = RandomWords()
 debug = False
-LINK_CHANCE_DEFAULT = 0.8
+LINK_CHANCE_DEFAULT = 0.7
 
 
 class Room:

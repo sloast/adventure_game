@@ -55,7 +55,7 @@ class Map:
 
         self.map_radius = 0
         self.side_length = 0
-        self.room_chance = 0.7
+        self.room_chance = 0.6
         self.map: List[List[Optional[Room]]] = []
         self.create_map()
 

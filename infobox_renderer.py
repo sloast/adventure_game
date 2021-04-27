@@ -129,7 +129,7 @@ class InfoBoxRenderer:
         pad_extra = 10
 
         for i, line in enumerate(arr):
-            box.draw(self.font.render(line, self.antialias, self.color),
+            box.draw(self.font.render(str(line), self.antialias, self.color),
                      pos(i, (0 if i == 0 else pad_extra)), reset=False)
 
         return box.image()
@@ -139,6 +139,8 @@ class InfoBoxRenderer:
 
     def update(self):
         self.data['health'] = 'HP: ' + str(self.player.hp)
-        a, l, e, = (self.player.items, len(self.player.items), 'Empty')
-        inv = ['Items:', a[0] if l > 0 else e, a[1] if l > 1 else e, a[2] if l > 2 else e]
+        a, l, e, = (self.player.items, len(self.player.items), '')
+        inv = ['Items: (' + str(l) + '/3)']
+        inv.extend(['' + (str(a[i]) if l > i else e) for i in range(3)])
+        self.data['inventory'] = inv
         self.data['room_name'] = str(self.map.curr_room.name)

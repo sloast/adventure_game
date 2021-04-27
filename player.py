@@ -1,5 +1,6 @@
-from event import Event
-from room import Room
+from event import *
+from room import *
+from item import *
 
 
 class Player:
@@ -8,7 +9,7 @@ class Player:
     """
 
     def __init__(self, map_, health=3, items=None):
-        self.items = items if items is not None else []
+        self.items = items if items is not None else [Item('ExampleItem')]
         self.map = map_
         self.room = self.map.first_room
         self.room._explored = True
